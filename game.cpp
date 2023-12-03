@@ -3,6 +3,7 @@
 #include <stack> 
 #include <limits.h>
 #include <chrono>
+#include <string.h>
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #define max(a,b) (((a) > (b)) ? (a) : (b))
@@ -15,13 +16,29 @@ const int MEDIUM_MODE = 6;
 const int HARD_MODE = 8;
 
 const int EMPTY_TOKEN = 0;
-const int PLAYER_TOKEN = 1;
+const int PLAYER1_TOKEN = 1;
 const int IA_TOKEN = 2;
+
+char EMPTY_SKIN = '-';
+char PLAYER1_SKIN = 'X';
+char IA_SKIN = 'Y';
 
 const int TOTAL_ROW = 6;
 const int TOTAL_COLUMN = 7;
 
 class GameBoard {
+private:
+    char getSkinToken(int valueToken) {
+        if(valueToken == PLAYER1_TOKEN) {
+            return PLAYER1_SKIN;
+        }
+
+        if(valueToken == IA_TOKEN) {
+            return IA_SKIN;
+        }
+
+        return EMPTY_SKIN;
+    }
 public:
     int board[TOTAL_ROW][TOTAL_COLUMN];
     GameBoard() {
@@ -34,7 +51,8 @@ public:
     void print() {
         for (int i = 0; i < TOTAL_ROW; i++) {
             for (int j = 0; j < TOTAL_COLUMN; j++) {
-                cout << board[i][j] << " ";
+
+                cout << this->getSkinToken(this->board[i][j]) << " ";
             }
             cout << endl;
         }
@@ -151,12 +169,12 @@ public:
     int heuristicScore(int correct, int incorrect, int empties) {
         int score = 0;
     
-        if (correct == 4) { score += 500001; } 
-        else if (correct == 3 && empties == 1) { score += 5000; }
-        else if (correct == 2 && empties == 2) { score += 500; }
-        else if (incorrect == 2 && empties == 2) { score -= 501; } 
-        else if (incorrect == 3 && empties == 1) { score -= 5001; }
-        else if (incorrect == 4) { score -= 500000; }
+        if (correct == 4) { score += 501; } 
+        else if (correct == 3 && empties == 1) { score += 50; }
+        else if (correct == 2 && empties == 2) { score += 5; }
+        else if (incorrect == 2 && empties == 2) { score -= 6; } 
+        else if (incorrect == 3 && empties == 1) { score -= 51; }
+        else if (incorrect == 4) { score -= 500; }
     
         return score;
     }
@@ -254,7 +272,7 @@ public:
 
                 copyGameboard.placePiece(this->currentToken, i);
 
-                NodeMiniMax newChild(copyGameboard, this->currentDepth -1, false, PLAYER_TOKEN);
+                NodeMiniMax newChild(copyGameboard, this->currentDepth -1, false, PLAYER1_TOKEN);
                 int currentScore = newChild.execute(useAlphaBetaPruning, alpha, beta);
                 
                 if(currentScore > value) {
@@ -316,11 +334,11 @@ public:
         this->maxDepth = depth;
     }
 
-    int getBestOption(GameBoard gameBoard, int maxDepth) {
+    int getBestOption(GameBoard gameBoard, int maxDepth, bool useAlphaBetaPruning) {
         cout << "THE IA IS COMPUTING THE BEST OPTION" << endl;
         NodeMiniMax rootNode(gameBoard, maxDepth, true, IA_TOKEN);
         auto start = high_resolution_clock::now();
-        int option = rootNode.execute(true, INT_MIN, INT_MAX);
+        int option = rootNode.execute(useAlphaBetaPruning, INT_MIN, INT_MAX);
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(stop - start);
         cout << "TOTAL TIME TO CHOOSE AN OPTION: " <<  duration.count() << " ms " << endl;
@@ -329,8 +347,8 @@ public:
 };
 
 string getNameToken(int token) {
-    if(token == PLAYER_TOKEN) {
-        return "USER";
+    if(token == PLAYER1_TOKEN) {
+        return "PLAYER";
     }
     return "IA";
 }
@@ -349,21 +367,101 @@ int userInput(GameBoard gameBoard) {
     return colUser;
 }
 
+bool useAlphaBetaPruningInput() {
+    string optionUser;
+    cout<<"Do you want to use alpha beta pruning: (yes or no)"<<endl;
+    cin >> optionUser;
+
+
+    while(optionUser != "yes" && optionUser != "no") {
+        cout<<"[Retry] Do you want to use alpha beta pruning: (yes or no)"<<endl;
+        cin >> optionUser; 
+    }
+
+    return optionUser == "yes";
+}
+
+int selectGameDifficult() {
+    int difficultOption;
+    cout<<"Please select the difficult to play: (0 = EASY, 1 = MEDIUM and 2 = HARD)"<<endl;
+    cin >> difficultOption;
+
+    while(difficultOption < 0 || difficultOption >= 3) {
+        cout << "The previous value is not valid" << endl;
+        cout<<"[RETRY]Please select the difficult to play: (0 = EASY, 1 = MEDIUM and 2 = HARD)"<<endl;
+        cin >> difficultOption; 
+    }
+
+    if(difficultOption == 0) { 
+        cout << "The EASY MODE is active! No trophies available" << endl;
+        return EASY_MODE; 
+    }
+
+    if(difficultOption == 1) { 
+        cout << "The MEDIUM MODE is active!" << endl;
+        return MEDIUM_MODE; 
+    }
+    
+    cout << "The HARD MODE is active!" << endl;
+    return HARD_MODE;
+}
+
+void changePlayersSkins() {
+    int changeSkinOption;
+    cout<<"Do you want to change the skin for the player: (1 = YES, 0 = NO)"<<endl;
+    cin >> changeSkinOption;
+
+    while(changeSkinOption < 0 || changeSkinOption > 1) {
+        cout << "The previous value is not valid" << endl;
+        cout<<"[RETRY]Do you want to change the skin for the player: (1 = YES, 0 = NO)"<<endl;
+        cin >> changeSkinOption;
+    }
+
+    if(changeSkinOption == 0) {
+        return;
+    }
+
+    char newPlayer1Skin;
+    cout<<"Please enter the new skin for the player: (just one char please, like A , C or M)"<<endl;
+    cin >> newPlayer1Skin;
+
+    while(newPlayer1Skin == EMPTY_SKIN || newPlayer1Skin == IA_SKIN) {
+        cout << "The option " << EMPTY_SKIN << " and " << IA_SKIN  << " are reserved tokens, please select type other option" << endl;
+        cout<<"[RETRY]Please enter the new skin for the player: (just one char please, like A , C or M)"<<endl;
+        cin >> newPlayer1Skin;
+    }
+
+    PLAYER1_SKIN = newPlayer1Skin;
+
+    cout << "The skin was changed correctly" << endl;
+    return;
+}
+
 int main() {
     GameBoard gameBoard;
     IAAgent miniMaxAgent(EASY_MODE);
 
-    gameBoard.print();
-
-    int currentPlayer = PLAYER_TOKEN;
     int columnSelected = 0;
+    int currentPlayer = PLAYER1_TOKEN;
+
+    changePlayersSkins();
+
+    bool useAlphaBetaPruning = useAlphaBetaPruningInput();
+
+    if(useAlphaBetaPruning) {
+        cout << "ALPHA BETA PRUNING ACTIVED!" << endl;
+    }
+
+    int difficultSelected = selectGameDifficult();
+
+    gameBoard.print();
 
     while (true)
     {
-        if(currentPlayer == PLAYER_TOKEN) {
+        if(currentPlayer == PLAYER1_TOKEN) {
             columnSelected = userInput(gameBoard);
         } else {
-            columnSelected = miniMaxAgent.getBestOption(gameBoard, HARD_MODE);
+            columnSelected = miniMaxAgent.getBestOption(gameBoard, difficultSelected, useAlphaBetaPruning);
         }
 
         gameBoard.placePiece(currentPlayer, columnSelected);
@@ -375,7 +473,7 @@ int main() {
             break;
         }
 
-        currentPlayer = currentPlayer == PLAYER_TOKEN ? IA_TOKEN : PLAYER_TOKEN;
+        currentPlayer = currentPlayer == PLAYER1_TOKEN ? IA_TOKEN : PLAYER1_TOKEN;
     }
 
     cout << "APP ENDED!" << endl;
