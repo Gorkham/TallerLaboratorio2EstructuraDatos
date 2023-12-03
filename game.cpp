@@ -2,10 +2,12 @@
 #include <vector>
 #include <stack> 
 #include <limits.h>
+#include <chrono>
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 
+using namespace std::chrono;
 using namespace std;
 
 const int EASY_MODE = 2;
@@ -131,7 +133,7 @@ public:
     
 };
 
-class Node{
+class NodeMiniMax{
 private:
     GameBoard currentGameBoard;
     int currentDepth;
@@ -139,7 +141,7 @@ private:
     int currentToken;
 
 public:
-    Node(GameBoard gameBoard, int depth, bool maximizingPlayer, int token) {
+    NodeMiniMax(GameBoard gameBoard, int depth, bool maximizingPlayer, int token) {
         this->currentGameBoard = gameBoard;
         this->currentDepth = depth;
         this->isMaximizing = maximizingPlayer;
@@ -236,7 +238,6 @@ public:
     int execute() {
         if(this->currentDepth == 0 || this->currentGameBoard.isFull()) {
             int score = this->evaluateBoard();
-            cout << "DEPTH: " << this->currentDepth << " - SCORE: " << score << " - full: " << this->currentGameBoard.isFull() << endl;
             return score;
         }
 
@@ -253,7 +254,7 @@ public:
 
                 copyGameboard.placePiece(this->currentToken, i);
 
-                Node newChild(copyGameboard, this->currentDepth -1, false, PLAYER_TOKEN);
+                NodeMiniMax newChild(copyGameboard, this->currentDepth -1, false, PLAYER_TOKEN);
                 int currentScore = newChild.execute();
                 if(currentScore > value) {
                     value = max(value, currentScore);
@@ -274,7 +275,7 @@ public:
 
                 copyGameboard.placePiece(this->currentToken, i);
 
-                Node newChild(copyGameboard, this->currentDepth -1, true, IA_TOKEN);
+                NodeMiniMax newChild(copyGameboard, this->currentDepth -1, true, IA_TOKEN);
                 int currentScore = newChild.execute();
                 if(currentScore < value) {
                     value = min(value, currentScore);
@@ -286,19 +287,22 @@ public:
     }
 };
 
-class MiniMaxAgent {
+class IAAgent {
 private:
     int maxDepth;
 public:
-    MiniMaxAgent(int depth) {
+    IAAgent(int depth) {
         this->maxDepth = depth;
     }
 
     int getBestOption(GameBoard gameBoard, int maxDepth) {
-        cout << "THE IA IS COMPUTING THE BEST OPTION TO KICK UR ASS" << endl;
-        Node rootNode(gameBoard, maxDepth, true, IA_TOKEN);
+        cout << "THE IA IS COMPUTING THE BEST OPTION" << endl;
+        NodeMiniMax rootNode(gameBoard, maxDepth, true, IA_TOKEN);
+        auto start = high_resolution_clock::now();
         int option = rootNode.execute();
-        cout << "ia option: " << option << endl;
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop - start);
+        cout << "TOTAL TIME TO CHOOSE AN OPTION: " <<  duration.count() << " µs " << endl;
         return option;
     }
 };
@@ -326,12 +330,13 @@ int userInput(GameBoard gameBoard) {
 
 int main() {
     GameBoard gameBoard;
-    MiniMaxAgent miniMaxAgent(EASY_MODE);
+    IAAgent miniMaxAgent(EASY_MODE);
 
     gameBoard.print();
 
     int currentPlayer = PLAYER_TOKEN;
     int columnSelected = 0;
+
     while (true)
     {
         if(currentPlayer == PLAYER_TOKEN) {
