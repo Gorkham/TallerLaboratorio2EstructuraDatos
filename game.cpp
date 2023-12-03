@@ -12,7 +12,7 @@ using namespace std;
 
 const int EASY_MODE = 2;
 const int MEDIUM_MODE = 6;
-const int HARD_MODE = 10;
+const int HARD_MODE = 8;
 
 const int EMPTY_TOKEN = 0;
 const int PLAYER_TOKEN = 1;
@@ -235,7 +235,7 @@ public:
         return score;
     }
 
-    int execute() {
+    int execute(bool useAlphaBetaPruning, int alpha, int beta) {
         if(this->currentDepth == 0 || this->currentGameBoard.isFull()) {
             int score = this->evaluateBoard();
             return score;
@@ -255,10 +255,21 @@ public:
                 copyGameboard.placePiece(this->currentToken, i);
 
                 NodeMiniMax newChild(copyGameboard, this->currentDepth -1, false, PLAYER_TOKEN);
-                int currentScore = newChild.execute();
+                int currentScore = newChild.execute(useAlphaBetaPruning, alpha, beta);
+                
                 if(currentScore > value) {
                     value = max(value, currentScore);
                     columnOption = i;
+                }
+
+                if(!useAlphaBetaPruning) {
+                    continue;
+                }
+
+                alpha = max(alpha, value);
+                
+                if(alpha >= beta) {
+                    break;
                 }
             }
             return columnOption;
@@ -276,10 +287,20 @@ public:
                 copyGameboard.placePiece(this->currentToken, i);
 
                 NodeMiniMax newChild(copyGameboard, this->currentDepth -1, true, IA_TOKEN);
-                int currentScore = newChild.execute();
+                int currentScore = newChild.execute(useAlphaBetaPruning, alpha, beta);
                 if(currentScore < value) {
                     value = min(value, currentScore);
                     columnOption = i;
+                }
+
+                if(!useAlphaBetaPruning) {
+                    continue;
+                }
+
+                beta = min(beta, value);
+                
+                if(alpha >= beta) {
+                    break;
                 }
             }
             return columnOption;
@@ -299,10 +320,10 @@ public:
         cout << "THE IA IS COMPUTING THE BEST OPTION" << endl;
         NodeMiniMax rootNode(gameBoard, maxDepth, true, IA_TOKEN);
         auto start = high_resolution_clock::now();
-        int option = rootNode.execute();
+        int option = rootNode.execute(true, INT_MIN, INT_MAX);
         auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<microseconds>(stop - start);
-        cout << "TOTAL TIME TO CHOOSE AN OPTION: " <<  duration.count() << " µs " << endl;
+        auto duration = duration_cast<milliseconds>(stop - start);
+        cout << "TOTAL TIME TO CHOOSE AN OPTION: " <<  duration.count() << " ms " << endl;
         return option;
     }
 };
@@ -342,7 +363,7 @@ int main() {
         if(currentPlayer == PLAYER_TOKEN) {
             columnSelected = userInput(gameBoard);
         } else {
-            columnSelected = miniMaxAgent.getBestOption(gameBoard, MEDIUM_MODE);
+            columnSelected = miniMaxAgent.getBestOption(gameBoard, HARD_MODE);
         }
 
         gameBoard.placePiece(currentPlayer, columnSelected);
