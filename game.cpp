@@ -100,13 +100,13 @@ public:
     bool checkWinning(int token) {
         int winSequence = 0; // to count adjacent pieces
         // for horizontal checks
-        for ( int c = 0; c < TOTAL_COLUMN - 3; c++) { // for each column
-            for ( int r = 0; r < TOTAL_ROW; r++) { // each row
-                for (int i = 0; i < 4; i++) { // recall you need 4 to win
-                    if (( int)board[r][c + i] == token) { // if not all pieces match
-                        winSequence++; // add sequence count
+        for ( int c = 0; c < TOTAL_COLUMN - 3; c++) { 
+            for ( int r = 0; r < TOTAL_ROW; r++) { 
+                for (int i = 0; i < 4; i++) { 
+                    if (( int)board[r][c + i] == token) { 
+                        winSequence++; 
                     }
-                    if (winSequence == 4) { return true; } // if 4 in row
+                    if (winSequence == 4) { return true; } 
                 }
                 winSequence = 0; // reset counter
             }
@@ -169,12 +169,12 @@ public:
     int heuristicScore(int correct, int incorrect, int empties) {
         int score = 0;
     
-        if (correct == 4) { score += 501; } 
+        if (correct == 4) { score += 301; } 
         else if (correct == 3 && empties == 1) { score += 50; }
         else if (correct == 2 && empties == 2) { score += 5; }
         else if (incorrect == 2 && empties == 2) { score -= 6; } 
         else if (incorrect == 3 && empties == 1) { score -= 51; }
-        else if (incorrect == 4) { score -= 500; }
+        else if (incorrect == 4) { score -= 300; }
     
         return score;
     }
