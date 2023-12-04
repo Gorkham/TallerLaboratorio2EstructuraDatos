@@ -25,7 +25,7 @@ char IA_SKIN = 'Y';
 
 const int TOTAL_ROW = 6;
 const int TOTAL_COLUMN = 7;
-
+//Type of board where it will be played
 class GameBoard {
 private:
     char getSkinToken(int valueToken) {
@@ -48,6 +48,7 @@ public:
             }
         }
     }
+    //print the board
     void print() {
         for (int i = 0; i < TOTAL_ROW; i++) {
             for (int j = 0; j < TOTAL_COLUMN; j++) {
@@ -57,7 +58,7 @@ public:
             cout << endl;
         }
     }
-
+    //check if the board is full
     bool isFull() {
         for (int i = 0; i < TOTAL_ROW; i++)
         {
@@ -70,7 +71,7 @@ public:
         }
         return true;        
     }
-
+    //Check if the column is valid to place a piece
     bool validColumnToPlacePiece(int column) {
         if(column >= TOTAL_COLUMN || column < 0) {
             return false;
@@ -84,7 +85,7 @@ public:
         }
         return false;
     }
-
+    //Place a piece in the selected column
     void placePiece(int token, int column) {
         
         for (int i = TOTAL_ROW - 1; i >= 0; i--)
@@ -96,7 +97,7 @@ public:
             }
         }
     }
-
+    //Check if someone has won
     bool checkWinning(int token) {
         int winSequence = 0; // to count adjacent pieces
         // for horizontal checks
@@ -150,7 +151,7 @@ public:
     };
     
 };
-
+//This is the minimax node
 class NodeMiniMax{
 private:
     GameBoard currentGameBoard;
@@ -165,7 +166,7 @@ public:
         this->isMaximizing = maximizingPlayer;
         this->currentToken = token;
     }
-
+    //This function is responsible for assigning values by evaluating the situation of the pieces in a sector of the board.
     int heuristicScore(int correct, int incorrect, int empties) {
         int score = 0;
     
@@ -178,7 +179,7 @@ public:
     
         return score;
     }
-
+    //Check the value of the sector
     int optionScore(vector<int> set) {
         int totalEmpties = 0;
         int totalCorrects = 0;
@@ -197,7 +198,7 @@ public:
         
         return heuristicScore(totalCorrects, totalIncorrects, totalEmpties);
     }
-
+    //The board is evaluated
     int evaluateBoard() {
         int score = 0;
         vector<int> rs(TOTAL_COLUMN);
@@ -252,7 +253,7 @@ public:
         }
         return score;
     }
-
+    //Here the minimax algorithm and alpha-beta pruning are used to choose the best option
     int execute(bool useAlphaBetaPruning, int alpha, int beta) {
         if(this->currentDepth == 0 || this->currentGameBoard.isFull()) {
             int score = this->evaluateBoard();
@@ -325,15 +326,16 @@ public:
         }
     }
 };
-
+// Agente de inteligencia artificial
 class IAAgent {
 private:
     int maxDepth;
 public:
+    // Constructor that receives the maximum depth for the minimax algorithm
     IAAgent(int depth) {
         this->maxDepth = depth;
     }
-
+    //// Get the best game option using the minimax algorithm
     int getBestOption(GameBoard gameBoard, int maxDepth, bool useAlphaBetaPruning) {
         cout << "THE IA IS COMPUTING THE BEST OPTION" << endl;
         NodeMiniMax rootNode(gameBoard, maxDepth, true, IA_TOKEN);
@@ -345,14 +347,14 @@ public:
         return option;
     }
 };
-
+//// Returns the name associated with a token
 string getNameToken(int token) {
     if(token == PLAYER1_TOKEN) {
         return "PLAYER";
     }
     return "IA";
 }
-
+// Function that handles user input to select a column
 int userInput(GameBoard gameBoard) {
     int colUser;
     cout<<"Please select the column to play: (0 to 6)"<<endl;
@@ -366,7 +368,7 @@ int userInput(GameBoard gameBoard) {
 
     return colUser;
 }
-
+//Ask if you want to use alpha-beta pruning
 bool useAlphaBetaPruningInput() {
     string optionUser;
     cout<<"Do you want to use alpha beta pruning: (yes or no)"<<endl;
@@ -380,7 +382,7 @@ bool useAlphaBetaPruningInput() {
 
     return optionUser == "yes";
 }
-
+//This function is responsible for the difficulty selection, depending on the difficulty a depth will be used
 int selectGameDifficult() {
     int difficultOption;
     cout<<"Please select the difficult to play: (0 = EASY, 1 = MEDIUM and 2 = HARD)"<<endl;
@@ -405,7 +407,7 @@ int selectGameDifficult() {
     cout << "The HARD MODE is active!" << endl;
     return HARD_MODE;
 }
-
+//In this function the player's skin is changed for a char
 void changePlayersSkins() {
     int changeSkinOption;
     cout<<"Do you want to change the skin for the player: (1 = YES, 0 = NO)"<<endl;
